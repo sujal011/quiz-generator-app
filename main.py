@@ -1,5 +1,5 @@
 from scrap import extract_article_text
-from quiz import generate_quiz_from_topic,generate_quiz_from_content
+from quiz import generate_quiz
 import streamlit as st
 
 
@@ -24,35 +24,41 @@ num_questions = st.number_input("Number of questions:", min_value=1, value=10)
 
 if st.button("Generate Quiz"):
     if url :
-        
-        article_text = extract_article_text(url)
+        with st.spinner("Extracting article text..."):
+            article_text = extract_article_text(url)
+            
         if article_text:
-            st.write("Generating quiz...")
-            quiz_data = generate_quiz_from_content(num_questions,article_text)
-            for question in quiz_data:
-                st.write(f"**Q{question['question_number']}: {question['question']}**")
-                st.write(f"a) {question['option_a']}")
-                st.write(f"b) {question['option_b']}")
-                st.write(f"c) {question['option_c']}")
-                st.write(f"d) {question['option_d']}")
-                st.write("")
-                st.write(f"Answer: {question['answer']}")
-                st.write("---")
+            with st.spinner("Generating quiz..."):
+                try:
+                    quiz_data = generate_quiz(num_questions,content=article_text)
+                    for question in quiz_data:
+                        st.write(f"**Q{question['question_number']}: {question['question']}**")
+                        st.write(f"a) {question['option_a']}")
+                        st.write(f"b) {question['option_b']}")
+                        st.write(f"c) {question['option_c']}")
+                        st.write(f"d) {question['option_d']}")
+                        st.write("")
+                        st.write(f"Answer: {question['answer']}")
+                        st.write("---")
+                except Exception as e:
+                    st.error(f"Failed to generate quiz: {str(e)}")
         else:
             st.error("Failed to extract text from the article.")
     elif topic:
-        
-        st.write("Generating quiz...")
-        quiz_data = generate_quiz_from_topic(num_questions,topic)
-        for question in quiz_data:
-            st.write(f"**Q{question['question_number']}: {question['question']}**")
-            st.write(f"a) {question['option_a']}")
-            st.write(f"b) {question['option_b']}")
-            st.write(f"c) {question['option_c']}")
-            st.write(f"d) {question['option_d']}")
-            st.write("")
-            st.write(f"Answer: {question['answer']}")
-            st.write("---")
+        with st.spinner("Generating quiz..."):
+            try:
+                quiz_data = generate_quiz(num_questions,topic=topic)
+                for question in quiz_data:
+                    st.write(f"**Q{question['question_number']}: {question['question']}**")
+                    st.write(f"a) {question['option_a']}")
+                    st.write(f"b) {question['option_b']}")
+                    st.write(f"c) {question['option_c']}")
+                    st.write(f"d) {question['option_d']}")
+                    st.write("")
+                    st.write(f"Answer: {question['answer']}")
+                    st.write("---")
+            except Exception as e:
+                    st.error(f"Failed to generate quiz: {str(e)}")
     else:
         st.error("Please enter a valid URL.")
 

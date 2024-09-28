@@ -42,17 +42,6 @@ quiz_template_content = PromptTemplate.from_template(
 )
 
 
-def generate_quiz_from_content(num,content):
-    quiz_chain = quiz_template_content | llm
-    quiz_result = quiz_chain.invoke({'number':num,'content': content})
-    
-    try: 
-        json_parser = JsonOutputParser()
-        res = json_parser.parse(quiz_result.content)
-        return res['questions']
-    except OutputParserException:
-        raise OutputParserException("Unable to parse")
-
 
 quiz_template_topic = PromptTemplate.from_template(
     """
@@ -63,9 +52,16 @@ quiz_template_topic = PromptTemplate.from_template(
 )
 
 
-def generate_quiz_from_topic(num,topic):
-    quiz_chain = quiz_template_topic | llm
-    quiz_result = quiz_chain.invoke({'number':num,'topic': topic})
+def generate_quiz(num, content=None, topic=None):
+    if content:
+        template = quiz_template_content
+    elif topic:
+        template = quiz_template_topic
+    else:
+        raise ValueError("Either content or topic must be provided")
+    
+    quiz_chain = template | llm
+    quiz_result = quiz_chain.invoke({'number': num, 'content': content, 'topic': topic})
     
     try: 
         json_parser = JsonOutputParser()
@@ -73,4 +69,3 @@ def generate_quiz_from_topic(num,topic):
         return res['questions']
     except OutputParserException:
         raise OutputParserException("Unable to parse")
-
