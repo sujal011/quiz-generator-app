@@ -12,6 +12,8 @@ choice = st.radio("Select input method:", ("Enter URL", "Enter Topic"))
 # Conditional input fields based on user's choice
 if choice == "Enter URL":
     url = st.text_input("Enter the URL of the article:")
+    if(not url.startswith('http')):
+        st.error("Please enter a valid URL.")
     topic = None
 else:
     topic = st.text_input("Enter the topic name to generate quiz:")

@@ -41,7 +41,7 @@ def create_google_form(quiz_data):
         "info": {
             "title": "Quiz",
             "documentTitle": "Generated Quiz",
-        }
+        },
     }
 
     form = service.forms().create(body=form_body).execute()
@@ -49,6 +49,19 @@ def create_google_form(quiz_data):
 
     # Step 2: Use batchUpdate to add questions to the form
     requests = []
+    
+    # Add the quiz settings in a separate batchUpdate request
+    requests.append({
+        "updateSettings": {
+            "settings": {
+                "quizSettings": {
+                    "isQuiz": True
+                }
+            },
+            "updateMask": "quizSettings.isQuiz"
+        }
+    })
+    
     for question in quiz_data:
         requests.append({
             "createItem": {
@@ -57,6 +70,16 @@ def create_google_form(quiz_data):
                     "questionItem": {
                         "question": {
                             "required": True,
+                            "grading": {
+                                "pointValue": 1,
+                                "correctAnswers": {
+                                "answers": [
+                                    {
+                                        "value": question[question["answer"]]
+                                    }
+                                ]
+                                }
+                            },
                             "choiceQuestion": {
                                 "type": "RADIO",
                                 "options": [
