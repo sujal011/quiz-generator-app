@@ -1,6 +1,6 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
-from langchain_core.output_parsers import JsonOutputParser
+# from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
 
 import os
@@ -13,31 +13,18 @@ llm = ChatGroq(
     temperature=0.7,
     groq_api_key=groq_api_key,
     model_name="llama-3.1-70b-versatile"
-)
+).with_structured_output(dict,method="json_mode")
 
-# quiz_template = PromptTemplate.from_template(
-#     """
-#     ### generate a {number} mcq based quiz on following:
-#     {content}
-    
-#     also separate each option with new line character for better visibility
-#     """
-# )
-
-
-
-# quiz_chain = quiz_template | llm
-# quiz_result = quiz_chain.invoke({'number':10,'topic': 'next js'})
-# print(quiz_result.content)
 
 
 quiz_template_content = PromptTemplate.from_template(
-    """
-    generate a {number} numbers of mcq based quiz from following content in JSON format similar to : questions:[{{ question_number, question, option_a,option_b,option_c,option_d, answer }}]:
+   """
+    generate {number} multiple-choice questions from the following content in JSON format with the structure: 
+    questions:[{{"question_number", "question", "option_a", "option_b", "option_c", "option_d", "answer"}}]:
     
-    {content} 
+    {content}
     
-    output should only contain VALID JSON and NO PREAMBLE
+    Output only valid JSON without any preamble or commentary.
     """
 )
 
@@ -45,9 +32,10 @@ quiz_template_content = PromptTemplate.from_template(
 
 quiz_template_topic = PromptTemplate.from_template(
     """
-    generate a {number} numbers of mcq based quiz on {topic} in JSON format similar to : questions:[{{ question_number, question, option_a,option_b,option_c,option_d, answer }}]
+    generate {number} multiple-choice questions on the topic "{topic}" in JSON format with the structure: 
+    questions:[{{"question_number", "question", "option_a", "option_b", "option_c", "option_d", "answer"}}]:
     
-    output should only contain VALID JSON and NO PREAMBLE
+    Output only valid JSON without any preamble or commentary.
     """
 )
 
@@ -55,17 +43,16 @@ quiz_template_topic = PromptTemplate.from_template(
 def generate_quiz(num, content=None, topic=None):
     if content:
         template = quiz_template_content
+        quiz_chain = template | llm
+        quiz_result = quiz_chain.invoke({'number': num, 'content': content})
     elif topic:
         template = quiz_template_topic
+        quiz_chain = template | llm
+        quiz_result = quiz_chain.invoke({'number': num, 'topic': topic})
     else:
         raise ValueError("Either content or topic must be provided")
     
-    quiz_chain = template | llm
-    quiz_result = quiz_chain.invoke({'number': num, 'content': content, 'topic': topic})
-    
     try: 
-        json_parser = JsonOutputParser()
-        res = json_parser.parse(quiz_result.content)
-        return res['questions']
-    except OutputParserException:
-        raise OutputParserException("Unable to parse")
+        return quiz_result['questions']
+    except KeyError:
+        raise OutputParserException("Unable to parse: 'questions' key not found in response.")
