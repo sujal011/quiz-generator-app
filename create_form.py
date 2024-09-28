@@ -6,6 +6,29 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from dotenv import load_dotenv
+
+# Load the environment variables from the .env file
+load_dotenv()
+
+# Construct the credentials dictionary from environment variables
+credentials = {
+    "web": {
+        "client_id": os.getenv("client_id"),
+        "project_id": os.getenv("project_id"),
+        "auth_uri": os.getenv("auth_uri"),
+        "token_uri": os.getenv("token_uri"),
+        "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
+        "client_secret": os.getenv("client_secret"),
+        "redirect_uris": [
+            os.getenv("redirect_uris_1")
+        ],
+        "javascript_origins": [
+            os.getenv("javascript_origins_1")
+        ]
+    }
+}
+
 # If modifying scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/forms.body', 'https://www.googleapis.com/auth/drive']
 
@@ -22,7 +45,7 @@ def authenticate_google_api():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('google_credentials/credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
             creds = flow.run_local_server(port=63813)
 
         # Save the credentials for the next run
